@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Screener Data Visualization
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  Color code and visualize data on Screener.in
 // @match        https://www.screener.in/company/*
 // @grant        GM_addStyle
@@ -11,11 +11,11 @@
 (function() {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+    script.onload = initialize; // Call the initialize function once the script has loaded
     document.head.appendChild(script);
 })();
 
-// Wait until Chart.js is loaded
-setTimeout(() => {
+function initialize() {
     const iconUrl = 'https://cdn-icons-png.flaticon.com/512/3281/3281323.png';
 
     // 1. Add Floating Button
@@ -232,5 +232,4 @@ setTimeout(() => {
             modal.style.display = "none";
         }
     };
-
-}, 500);
+}
