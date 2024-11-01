@@ -17,10 +17,11 @@ To install these scripts, follow these steps:
 
 ## Scripts
 
-| Script Name              | Install Link     |
-|-------------------------|--------------------------------------------|-------------------|
-| Screener.in Conditional Formatting  |  [Install](https://iluvmarkets.github.io/tamper_monkey/screener_sales_profit_colors.js)      |
-| Screener.in Charts |  [Install](https://iluvmarkets.github.io/tamper_monkey/screener_charts.js)      |
+### Screener.in Conditional Formatting
+<https://iluvmarkets.github.io/tamper_monkey/screener_sales_profit_colors.js>
+
+### Screener.in Charts 
+<https://iluvmarkets.github.io/tamper_monkey/screener_charts.js>
 
 
 
