@@ -15,6 +15,15 @@ To install these scripts, follow these steps:
 2. Click on the **Install** link next to the desired script in the table above.
 3. Review the script in Tampermonkey and click **Install**.
 
+## Scripts
+
+| Script Name              | Install Link     |
+|-------------------------|--------------------------------------------|-------------------|
+| Screener.in Conditional Formatting  |  [Install](https://iluvmarkets.github.io/tamper_monkey/screener_sales_profit_colors.js)      |
+| Screener.in Charts |  [Install](https://iluvmarkets.github.io/tamper_monkey/screener_charts.js)      |
+
+
+
 ## Contributing
 
 Contributions are welcome! Feel free to submit a pull request if you'd like to add a new feature, improve existing scripts, or fix a bug. 
