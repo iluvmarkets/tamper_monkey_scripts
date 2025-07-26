@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Screener Data Visualization
+// @name         Screener Shareholding Data Visualization
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      1.0
 // @description  Color code and visualize data on Screener.in
 // @match        https://www.screener.in/company/*
 // @grant        GM_addStyle
@@ -27,20 +27,23 @@ function loadChartScript(callback) {
 }
 
 function initialize() {
-    const iconUrl = 'https://cdn-icons-png.flaticon.com/512/3281/3281323.png';
+    const iconUrl = 'https://cdn-icons-png.flaticon.com/512/8567/8567167.png';
 
     // 1. Add Floating Button
     const button = document.createElement('button');
-    button.id = 'floatingBtn';
-    button.innerHTML = `<img src="${iconUrl}" width="30" height="30" alt="Show Charts">`;
+    button.id = 'floatingBtnShd';
+    button.innerHTML = `<img src="${iconUrl}" width="30" height="30" alt="Show Shareholding">`;
     document.body.appendChild(button);
 
     button.addEventListener('click', openPopup);
 
     GM_addStyle(`
-        #floatingBtn {
+        :root {
+        color-scheme: light dark;
+        }        
+        #floatingBtnShd {
             position: fixed;
-            top: 50%;
+            top: 60%;
             right: 20px;
             z-index: 1000;
             padding: 10px;
@@ -50,7 +53,7 @@ function initialize() {
             cursor: pointer;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-        #popupModal {
+        #popupModalShd {
             display: none;
             position: fixed;
             top: 50%;
@@ -65,7 +68,7 @@ function initialize() {
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
         }
-        #popupModal .close {
+        #popupModalShd .close {
             float: right;
             cursor: pointer;
             font-size: 20px;
@@ -106,32 +109,31 @@ function initialize() {
 
     // 2. Popup Modal with Columns for Quarterly and Yearly Charts
     const modal = document.createElement('div');
-    modal.id = 'popupModal';
+    modal.id = 'popupModalShd';
     modal.innerHTML = `
-        <span class="close" onclick="document.getElementById('popupModal').style.display='none'">&times;</span>
+        <span class="close" onclick="document.getElementById('popupModalShd').style.display='none'">&times;</span>
+        <div class="column-title">Shareholding Pattern</div>
         <div class="charts-wrapper">
             <div class="chart-column">
-                <div class="column-title">Quarterly</div>
                 <div class="chart-container">
-                    <canvas id="quarterlySalesChart"></canvas>
+                    <canvas id="Chart00"></canvas>
                 </div>
                 <div class="chart-container">
-                    <canvas id="quarterlyProfitChart"></canvas>
+                    <canvas id="Chart01"></canvas>
                 </div>
                 <div class="chart-container">
-                    <canvas id="quarterlyEpsChart"></canvas>
+                    <canvas id="Chart02"></canvas>
                 </div>
             </div>
             <div class="chart-column">
-                <div class="column-title">Yearly</div>
                 <div class="chart-container">
-                    <canvas id="yearlySalesChart"></canvas>
+                    <canvas id="Chart10"></canvas>
                 </div>
                 <div class="chart-container">
-                    <canvas id="yearlyProfitChart"></canvas>
+                    <canvas id="Chart11"></canvas>
                 </div>
                 <div class="chart-container">
-                    <canvas id="yearlyEpsChart"></canvas>
+                    <canvas id="Chart12"></canvas>
                 </div>
             </div>
         </div>
@@ -140,28 +142,23 @@ function initialize() {
 
     // 3. Function to open the popup and render both Quarterly and Yearly charts
     function openPopup() {
-        document.getElementById('popupModal').style.display = 'block';
+        document.getElementById('popupModalShd').style.display = 'block';
 
-        if(chartInstances && Object.keys(chartInstances).length > 0) {
-            return;
-        }
+        const timeLabels = readChartLabels("#shareholding");
 
-        const quarterlyLabels = readChartLabels("#quarters");
-        const yearlyLabels = readChartLabels("#profit-loss");
+        const promotersData = readLabelValues("#shareholding", "Promoters");
+        const fiiData = readLabelValues("#shareholding", "FIIs");
+        const diiDataData = readLabelValues("#shareholding", "DIIs");
+        const govtData = readLabelValues("#shareholding", "Government");
+        const publicData = readLabelValues("#shareholding", "Public");
+        const shData = readLabelValues("#shareholding", "No. of Shareholders");
 
-        const quarterlySalesData = readLabelValues("#quarters", "Sales") || readLabelValues("#quarters", "Revenue");
-        const quarterlyProfitData = readLabelValues("#quarters", "Net Profit");
-        const quarterlyEpsData = readLabelValues("#quarters", "EPS in Rs");
-        const yearlySalesData = readLabelValues("#profit-loss", "Sales") || readLabelValues("#profit-loss", "Revenue");
-        const yearlyProfitData = readLabelValues("#profit-loss", "Net Profit");
-        const yearlyEpsData = readLabelValues("#profit-loss", "EPS in Rs");
-
-        renderChart('quarterlySalesChart', 'Sales / Revenue', quarterlyLabels, quarterlySalesData);
-        renderChart('quarterlyProfitChart', 'Net Profit', quarterlyLabels, quarterlyProfitData);
-        renderChart('quarterlyEpsChart', 'EPS', quarterlyLabels, quarterlyEpsData);
-        renderChart('yearlySalesChart', 'Sales / Revenue', yearlyLabels, yearlySalesData);
-        renderChart('yearlyProfitChart', 'Net Profit', yearlyLabels, yearlyProfitData);
-        renderChart('yearlyEpsChart', 'EPS', yearlyLabels, yearlyEpsData);
+        renderChart('Chart00', 'Promoters', timeLabels, promotersData);
+        renderChart('Chart01', 'FIIs', timeLabels, fiiData);
+        renderChart('Chart02', 'DIIs', timeLabels, diiDataData);
+        renderChart('Chart10', 'Public', timeLabels, publicData);
+        renderChart('Chart11', 'Government', timeLabels, govtData);
+        renderChart('Chart12', 'No. of Shareholders', timeLabels, shData);
     }
 
     // 4. Function to render charts with a title and conditional coloring
@@ -170,21 +167,28 @@ function initialize() {
 
     function renderChart(canvasId, title, labels, data) {
 
-        // Destroy existing chart instance if it exists
-        if (chartInstances[canvasId]) {
+        if (!data) {
             return;
         }
 
         const ctx = document.getElementById(canvasId).getContext('2d');
+
+        // Destroy existing chart instance if it exists
+        if (chartInstances[canvasId]) {
+            chartInstances[canvasId].destroy();
+        }
+
         const colors = data.map((value, index) => {
             const prevValue = index > 0 ? data[index - 1] : value;
             return value < prevValue ? 'rgba(255, 99, 132, 0.7)' : 'rgba(75, 192, 192, 0.7)';
         });
+
         const borderColors = data.map((value, index) => {
             const prevValue = index > 0 ? data[index - 1] : value;
             return value < prevValue ? 'rgba(255, 99, 132, 1)' : 'rgba(75, 192, 192, 1)';
         });
 
+        // Create new chart instance and save it
         chartInstances[canvasId] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -226,10 +230,12 @@ function initialize() {
         });
     }
 
+
     // 5. Functions to read chart labels and values
     function readChartLabels(section) {
         const container = document.querySelector(section);
-        const targetRow = container.querySelector("table thead tr");
+        const shp = container.querySelector("#quarterly-shp:not(.hidden), #yearly-shp:not(.hidden)");
+        const targetRow = shp.querySelector("table thead tr");
 
         if (!targetRow) return;
 
@@ -239,11 +245,15 @@ function initialize() {
 
     function readLabelValues(section, label) {
         const container = document.querySelector(section);
-        const targetRow = Array.from(container.querySelectorAll('tr')).find(row =>
-            row.querySelector('td.text')?.innerText.trim() === label ||
-            row.querySelector(`button[onclick*="${label}"]`)
-        );
+        const shp = container.querySelector("#quarterly-shp:not(.hidden), #yearly-shp:not(.hidden)");
 
+        const targetRow = Array.from(shp.querySelectorAll('tr')).find(row =>
+            row.querySelector('td.text')?.innerText.trim() === label ||
+            Array.from(row.querySelectorAll('button')).some(button =>
+                button.getAttribute('onclick')?.includes(label) || button.innerText.trim().startsWith(label)
+            )
+        );
+        
         if (!targetRow) return;
 
         const valueCells = Array.from(targetRow.querySelectorAll('td:not(.text)'));
@@ -251,7 +261,7 @@ function initialize() {
     }
 
     // Close Modal when clicking outside
-    window.onclick = function(event) {
+    window.onclick = function (event) {
         if (event.target == modal) {
             modal.style.display = "none";
         }
